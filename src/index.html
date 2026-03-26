@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>colour diary</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .window {
+      position: absolute;
+      inset: 12px;
+      background: #faf8f5;
+      border-radius: 20px;
+      padding: 24px 26px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+      -webkit-app-region: drag;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      -webkit-app-region: drag;
+    }
+    .app-title { font-size: 14px; font-weight: 500; color: #2c2c2a; }
+    .year-tag  { font-size: 12px; color: #a0998e; }
+
+    .traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    .tl {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: none; cursor: pointer;
+      transition: filter 0.15s;
+      flex-shrink: 0;
+    }
+    .tl:hover { filter: brightness(0.85); }
+    .tl-close    { background: #ff5f57; }
+    .tl-minimise { background: #ffbd2e; }
+
+    .year-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    .chevron {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #a0998e;
+      font-size: 13px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: background 0.1s;
+    }
+    .chevron:hover { background: #ede8e0; }
+    .chevron:disabled { opacity: 0.2; cursor: default;
+    }
+
+    .today-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid #ede8e0;
+      border-radius: 14px;
+      flex-shrink: 0;
+      -webkit-app-region: no-drag;
+    }
+
+    .circle {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: #e8e0f0;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .circle:hover { transform: scale(1.08); }
+
+    .today-info { flex: 1; }
+    .today-date   { font-size: 11px; color: #a0998e; margin-bottom: 2px; }
+    .today-status { font-size: 13px; font-weight: 500; color: #2c2c2a; }
+
+    .save-btn {
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid #d4cdc4;
+      background: #fff;
+      color: #2c2c2a;
+      cursor: pointer;
+      transition: background 0.1s;
+      white-space: nowrap;
+      -webkit-app-region: no-drag;
+    }
+    .save-btn:hover { background: #f5f0ea; }
+    .save-btn.saved { color: #5a9e6f; border-color: #a8d4b8; background: #f0faf4; }
+
+    .picker-card {
+      background: #fff;
+      border: 1px solid #ede8e0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      -webkit-app-region: no-drag;
+      position: absolute;
+      top: 160px;
+      left: 26px;
+      right: 26px;
+      z-index: 10;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+    }
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .swatch {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      transition: transform 0.1s;
+      flex-shrink: 0;
+    }
+    .swatch:hover  { transform: scale(1.2); }
+    .swatch.active { outline: 2px solid #2c2c2a; outline-offset: 2px; }
+    .custom-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: #a0998e;
+    }
+    .custom-row input[type=color] {
+      width: 30px; height: 22px;
+      border: 1px solid #d4cdc4; border-radius: 5px;
+      padding: 1px 2px; cursor: pointer; background: #fff;
+    }
+
+    .grid-section { flex: 1; min-height: 0; -webkit-app-region: no-drag; overflow: hidden; width: 100%;}
+
+    .grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .grid-label { font-size: 10px; color: #b0a89e; letter-spacing: 0.04em; }
+    .streak     { font-size: 11px; color: #a0998e; }
+
+    .month-row  { display: flex; margin-bottom: 3px; }
+    .ml {
+      font-size: 9px; color: #c0b8ae;
+      line-height: 1; flex-shrink: 0;
+      display: inline-block; overflow: hidden;
+    }
+
+    .grid { display: flex; gap: 2px; gap: 2px; flex: 1; min-width: 0;}
+
+    .week-col { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cell {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 2px;
+      cursor: default;
+      transition: transform 0.1s;
+    }
+
+    .cell:hover     { transform: scale(1.5); z-index: 10; position: relative; }
+    .cell.empty     { background: #ede8e0; }
+    .cell.future    { background: transparent; border: 1px solid #e8e2d8; }
+    .cell.blank     { background: transparent; border: none; }
+    .cell.today-cell { outline: 2px solid #2c2c2a; outline-offset: 1px; }
+  </style>
+</head>
+<body>
+<div class="window">
+
+  <div class="header">
+    <div class="traffic-lights">
+      <button class="tl tl-close"    onclick="window.close()"></button>
+      <button class="tl tl-minimise" onclick="minimiseWindow()"></button>
+    </div>
+    <span class="app-title">colour diary</span>
+    <div class="year-nav">
+      <button class="chevron" id="prev-year" onclick="changeYear(-1)">‹</button>
+      <span class="year-tag" id="year-label"></span>
+      <button class="chevron" id="next-year" onclick="changeYear(1)">›</button>
+    </div>
+  </div>
+
+  <div class="today-card">
+    <div class="circle" id="circle" onclick="togglePicker()"></div>
+    <div class="today-info">
+      <div class="today-date"   id="today-date"></div>
+      <div class="today-status" id="today-status">tap the circle to pick today's colour</div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="saveToday()">save</button>
+  </div>
+
+  <div class="picker-card" id="picker-card" style="display:none">
+    <div class="swatches" id="swatches"></div>
+    <div class="custom-row">
+      <span>custom</span>
+      <input type="color" id="custom-color" value="#c084fc" oninput="setColor(this.value)">
+    </div>
+  </div>
+
+  <div class="grid-section">
+    <div class="grid-header">
+      <span class="grid-label">this year</span>
+      <span class="streak" id="streak"></span>
+    </div>
+    <div class="month-row" id="month-row"></div>
+    <div class="grid"      id="grid"></div>
+  </div>
+
+</div>
+<script>
+  const { ipcRenderer } = require('electron');
+
+  let viewYear = new Date().getFullYear();
+  const thisYear = new Date().getFullYear();
+
+  function minimiseWindow() {
+    ipcRenderer.invoke('minimise-window');
+  }
+
+  function changeYear(dir) {
+    const years = Object.keys(diary).map(k => parseInt(k.slice(0,4)));
+    const minYear = years.length ? Math.min(...years) : thisYear;
+    const newYear = viewYear + dir;
+    if (newYear < minYear || newYear > thisYear) return;
+    viewYear = newYear;
+    document.getElementById('year-label').textContent = viewYear;
+    document.getElementById('prev-year').disabled = viewYear <= minYear;
+    document.getElementById('next-year').disabled = viewYear >= thisYear;
+    buildGrid();
+  }
+
+  function updateYearNav() {
+    const years = Object.keys(diary).map(k => parseInt(k.slice(0,4)));
+    const minYear = years.length ? Math.min(...years) : thisYear;
+    document.getElementById('prev-year').disabled = viewYear <= minYear;
+    document.getElementById('next-year').disabled = viewYear >= thisYear;
+  }
+
+  const SWATCHES = [
+    '#fca5a5','#fdba74','#fcd34d','#86efac','#6ee7b7','#67e8f9',
+    '#93c5fd','#c4b5fd','#f0abfc','#f9a8d4','#d1d5db','#f5f0ea',
+    '#f87171','#fb923c','#fbbf24','#4ade80','#34d399','#22d3ee',
+    '#60a5fa','#a78bfa','#e879f9','#f472b6','#9ca3af','#e8e0f0',
+  ];
+
+  let diary = {}, selectedColor = '#c4b5fd', pickerOpen = false, todayKey = '';
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function dateKey(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+  function formatDate(d) {
+    return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}).toLowerCase();
+  }
+  function isLeapYear(y) { return (y%4===0&&y%100!==0)||y%400===0; }
+
+  async function init() {
+    const today = new Date();
+    todayKey = dateKey(today);
+    const raw = await ipcRenderer.invoke('load-diary');
+    diary = JSON.parse(raw || '{}');
+    document.getElementById('year-label').textContent = viewYear;
+    document.getElementById('today-date').textContent = formatDate(today);
+    if (diary[todayKey]) {
+      selectedColor = diary[todayKey];
+      document.getElementById('today-status').textContent = "today's colour is saved";
+      document.getElementById('save-btn').textContent = 'update';
+      document.getElementById('save-btn').classList.add('saved');
+    }
+    document.getElementById('circle').style.background = selectedColor;
+    buildSwatches(); buildGrid(); updateStreak(); updateYearNav();
+  }
+
+  function buildSwatches() {
+    const el = document.getElementById('swatches');
+    el.innerHTML = '';
+    SWATCHES.forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'swatch' + (c === selectedColor ? ' active' : '');
+      d.style.background = c;
+      d.onclick = () => setColor(c);
+      el.appendChild(d);
+    });
+  }
+
+  function setColor(c) {
+    selectedColor = c;
+    document.getElementById('circle').style.background = c;
+    document.getElementById('custom-color').value = c;
+    document.getElementById('today-status').textContent = 'tap save to log this colour';
+    document.getElementById('save-btn').textContent = 'save';
+    document.getElementById('save-btn').classList.remove('saved');
+    document.querySelectorAll('.swatch').forEach(s =>
+      s.classList.toggle('active', s.style.background===c||s.style.backgroundColor===c));
+  }
+
+  function togglePicker() {
+    pickerOpen = !pickerOpen;
+    document.getElementById('picker-card').style.display = pickerOpen ? 'block' : 'none';
+  }
+
+  async function saveToday() {
+    if (!selectedColor) return;
+    diary[todayKey] = selectedColor;
+    await ipcRenderer.invoke('save-diary', JSON.stringify(diary));
+    document.getElementById('today-status').textContent = 'saved!';
+    document.getElementById('save-btn').textContent = 'saved';
+    document.getElementById('save-btn').classList.add('saved');
+    pickerOpen = false;
+    document.getElementById('picker-card').style.display = 'none';
+    buildGrid(); updateStreak();
+  }
+
+  function buildGrid() {
+    const grid = document.getElementById('grid');
+    const monthRow = document.getElementById('month-row');
+    grid.innerHTML = ''; monthRow.innerHTML = '';
+
+    const today    = new Date();
+    const year     = viewYear;
+    const start    = new Date(year, 0, 1);
+    const todayIdx = viewYear === thisYear 
+      ? Math.floor((new Date() - start) / 86400000)
+      : (isLeapYear(year) ? 365 : 364);
+    const total    = isLeapYear(year) ? 366 : 365;
+    const startDow = start.getDay();
+    const numWeeks = Math.ceil((startDow + total) / 7);
+
+    const monthLabelData = [];
+    let lastMonth = -1;
+
+    for (let w = 0; w < numWeeks; w++) {
+      const col = document.createElement('div');
+      col.className = 'week-col';
+
+      for (let dow = 0; dow < 7; dow++) {
+        const cell   = document.createElement('div');
+        cell.className = 'cell';
+        const dayIdx = w * 7 + dow - startDow;
+
+        if (dayIdx < 0 || dayIdx >= total) {
+          cell.classList.add('blank');
+        } else {
+          const d = new Date(year, 0, 1 + dayIdx);
+          const k = dateKey(d);
+          const m = d.getMonth();
+
+          if (m !== lastMonth) {
+            monthLabelData.push({ week: w, label: d.toLocaleDateString('en-GB',{month:'short'}).toLowerCase() });
+            lastMonth = m;
+          }
+
+          if (dayIdx > todayIdx)  cell.classList.add('future');
+          else if (diary[k])      { cell.style.background = diary[k]; cell.title = formatDate(d); }
+          else                     cell.classList.add('empty');
+
+          if (k === todayKey) cell.classList.add('today-cell');
+        }
+        col.appendChild(cell);
+      }
+      grid.appendChild(col);
+    }
+
+    // after the grid is built, position month labels by actual column positions
+    requestAnimationFrame(() => {
+      monthRow.innerHTML = '';
+      const cols = grid.querySelectorAll('.week-col');
+      const gridLeft = grid.getBoundingClientRect().left;
+
+      monthLabelData.forEach(m => {
+        const col = cols[m.week];
+        if (!col) return;
+        const colLeft = col.getBoundingClientRect().left - gridLeft;
+        const span = document.createElement('span');
+        span.className = 'ml';
+        span.style.position = 'absolute';
+        span.style.left = colLeft + 'px';
+        span.textContent = m.label;
+        monthRow.appendChild(span);
+      });
+
+      monthRow.style.position = 'relative';
+      monthRow.style.height = '12px';
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
